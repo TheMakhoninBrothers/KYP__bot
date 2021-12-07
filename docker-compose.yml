@@ -1,0 +1,45 @@
+version: "3.3"
+
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: keep-your-pass__bot
+    container_name: KYP__bot
+    restart: always
+    env_file: .env
+    volumes:
+      - .:/app
+    command: python main.py
+    depends_on:
+      - db
+    tty: True
+
+  migration:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: keep-your-pass__migration
+    container_name: KYP__migration
+    env_file: .env
+    volumes:
+      - .:/app
+    command: bash -c "alembic stamp head && alembic revision --autogenerate -m "update" && alembic upgrade head"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13.2-alpine
+    container_name: KYP__db
+    restart: always
+    ports:
+      - "5430:5432"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - /opt/disk/keep-your-pass/postgres:/var/lib/postgresql/data
