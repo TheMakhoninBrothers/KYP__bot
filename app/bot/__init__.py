@@ -1,11 +1,42 @@
 from aiogram import Bot, Dispatcher, types
 
+import new_patch
+from app import db
 from app import resourses as modules
 from configs import bot as bot_settings
 
-bot = Bot(token=bot_settings.TOKEN)
+
+class ExtensionBot(Bot):
+
+    async def send_message(self, *args, **kwargs) -> types.Message:
+        message = await super(ExtensionBot, self).send_message(*args, **kwargs)
+        await save_user_step(message)
+        return message
+
+
+async def save_user_step(message: types.Message):
+    user_step = db.UserHistory(chat_id=message.chat.id,
+                               message_id=message.message_id,
+                               )
+    db.Session().add(user_step)
+    db.Session().commit()
+    db.Session().close()
+
+
+bot = ExtensionBot(token=bot_settings.TOKEN)
 
 dp = Dispatcher(bot)
+
+
+async def on_startup(dispatcher, url=None, cert=None):
+    for user in modules.user.repository.TelegramUserRepository.read_all():
+        await bot.send_message(chat_id=user.chat_id, text='Бот запущен')
+        await bot.send_message(chat_id=user.chat_id, text=new_patch.text)
+
+
+async def on_shutdown(dispatcher):
+    for user in modules.user.repository.TelegramUserRepository.read_all():
+        await bot.send_message(chat_id=user.chat_id, text='Бот выключился')
 
 
 def auto_registration(func):
@@ -17,6 +48,7 @@ def auto_registration(func):
                                                 chat_id=message.chat.id,
                                                 )
             user = modules.user.TelegramUserRepository.create(user)
+        await save_user_step(message)
         return await func(message, user)
 
     return wrapper
@@ -25,15 +57,16 @@ def auto_registration(func):
 @dp.message_handler(commands='start')
 @auto_registration
 async def main_menu(message: types.Message, user: modules.user.schemas.UserBotFromDB):
-    await message.reply(f'BOT ID: {user.chat_id}\n'
-                        f'USERNAME: {user.username}\n'
-                        'Доступные команды:\n'
-                        '/start - Главное меню\n'
-                        '/add - Добавить новую запись\n'
-                        '/get - Посмотреть все свои записи\n'
-                        '/get <Номер записи> - Посмотреть в отдельности'
-                        '/del <Номер записи> - Удалить запись'
-                        )
+    await bot.send_message(chat_id=user.chat_id,
+                           text=f'BOT ID: {user.chat_id}\n'
+                                f'USERNAME: {user.username}\n'
+                                'Доступные команды:\n'
+                                '/start - Главное меню\n'
+                                '/add - Добавить новую запись\n'
+                                '/get - Посмотреть все свои записи\n'
+                                '/get <Номер записи> - Посмотреть в отдельности'
+                                '/del <Номер записи> - Удалить запись'
+                           )
 
 
 @dp.message_handler(commands='add')
@@ -45,10 +78,12 @@ async def add_record(message: types.Message, user: modules.user.schemas.UserBotF
                                                chat_id=user.chat_id)
         new_record = modules.record.RecordRepository.create(record)
         if new_record:
-            await message.reply(f'Запись успешно сохранена под номером: {new_record.id}')
+            await bot.send_message(chat_id=user.chat_id,
+                                   text=f'Запись успешно сохранена под номером: {new_record.id}')
     else:
-        await message.reply('Вам нужно добавить текст после /add\n'
-                            'Например: "/add Моя новая запись"')
+        await bot.send_message(chat_id=user.chat_id,
+                               text='Вам нужно добавить текст после /add\n'
+                                    'Например: "/add Моя новая запись"')
 
 
 @dp.message_handler(commands='get')
@@ -69,7 +104,7 @@ async def get_records(message: types.Message, user: modules.user.schemas.UserBot
         for record in records:
             text = f'{text}\n\nЗапись {record.id}\n' \
                    f'{record.text}'
-        await message.reply(text)
+        await bot.send_message(chat_id=user.chat_id, text=text)
 
 
 @dp.message_handler(commands='del')
@@ -82,6 +117,6 @@ async def del_record(message: types.Message, user: modules.user.schemas.UserBotF
         record_id = None
     if record_id:
         modules.record.RecordRepository.delete(record_id)
-        await message.reply('Запись удалена')
+        await bot.send_message(chat_id=user.chat_id, text='Запись удалена')
     else:
-        await message.reply('Запись не найдена')
+        await bot.send_message(chat_id=user.chat_id, text='Запись не найдена')

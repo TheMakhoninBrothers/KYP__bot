@@ -28,6 +28,19 @@ services:
     command: bash -c "alembic stamp head && alembic revision --autogenerate -m "update" && alembic upgrade head"
     depends_on:
       - db
+  schedule:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: keep-your-pass__schedule
+    container_name: KYP__schedule
+    env_file: .env
+    volumes:
+      - .:/app
+    command: python run_scheduler.py
+    depends_on:
+      - db
+    tty: True
 
   db:
     image: postgres:13.2-alpine

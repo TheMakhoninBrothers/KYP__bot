@@ -33,5 +33,12 @@ class TelegramUserRepository:
                                  chat_id=user_chat_id,
                                  )
 
+    @classmethod
+    def read_all(cls) -> typing.List[UserBotFromDB]:
+        return [UserBotFromDB(id=item.id,
+                              uesrname=item.username,
+                              chat_id=item.telegram_id,
+                              ) for item in db.Session().query(db.TelegramUser).all()]
+
 
 __all__ = ['TelegramUserRepository']

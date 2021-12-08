@@ -41,3 +41,12 @@ class Record(Base):
 
     user_id = sql.Column(sql.Integer, sql.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     user = relationship('User', backref=backref('records'))
+
+
+class UserHistory(Base):
+    """История сообщений пользователя"""
+    __tablename__ = 'user_history'
+    id = sql.Column(sql.Integer, primary_key=True)
+    message_id = sql.Column(sql.Integer, nullable=False)
+    chat_id = sql.Column(sql.Integer, nullable=False)
+    create_at = sql.Column(sql.DateTime, default=datetime.now, nullable=False)
