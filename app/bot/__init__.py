@@ -1,4 +1,5 @@
 from aiogram import Bot, Dispatcher, types
+from aiogram.utils.exceptions import BotBlocked
 
 import new_patch
 from app import db
@@ -10,9 +11,12 @@ class ExtensionBot(Bot):
 
     async def send_message(self, *args, **kwargs) -> types.Message:
         kwargs['parse_mode'] = 'html'
-        message = await super(ExtensionBot, self).send_message(*args, **kwargs)
-        await save_user_step(message)
-        return message
+        try:
+            message = await super(ExtensionBot, self).send_message(*args, **kwargs)
+            await save_user_step(message)
+            return message
+        except BotBlocked:
+            pass
 
 
 async def save_user_step(message: types.Message):
