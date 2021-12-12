@@ -9,6 +9,7 @@ from configs import bot as bot_settings
 class ExtensionBot(Bot):
 
     async def send_message(self, *args, **kwargs) -> types.Message:
+        kwargs['parse_mode'] = 'html'
         message = await super(ExtensionBot, self).send_message(*args, **kwargs)
         await save_user_step(message)
         return message
@@ -73,7 +74,7 @@ async def main_menu(message: types.Message, user: modules.user.schemas.UserBotFr
 @dp.message_handler(commands='add')
 @auto_registration
 async def add_record(message: types.Message, user: modules.user.schemas.UserBotFromDB):
-    new_text = message.text[len('/add'):].strip()
+    new_text = message.html_text[len('/add'):].strip()
     if new_text:
         record = modules.record.schemas.Record(text=new_text,
                                                chat_id=user.chat_id)
