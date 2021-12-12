@@ -120,3 +120,21 @@ async def del_record(message: types.Message, user: modules.user.schemas.UserBotF
         await bot.send_message(chat_id=user.chat_id, text='Запись удалена')
     else:
         await bot.send_message(chat_id=user.chat_id, text='Запись не найдена')
+
+
+@dp.message_handler(regexp=bot_settings.SEARCH_TAGS_REGEX)
+@auto_registration
+async def search_by_tags(message: types.Message, user: modules.user.schemas.UserBotFromDB):
+    """Поиск по тегам"""
+    tags = modules.helpers.parse_tags(message.text, bot_settings.SEARCH_TAGS_REGEX)
+    records = modules.record.RecordSearcher(str(message.chat.id)).by_tags(*tags)
+    if records:
+        text = ''
+        for record in records:
+            text = f'{text}\n\nЗапись {record.id}\n' \
+                   f'{record.text}'
+        await bot.send_message(chat_id=user.chat_id, text=text)
+    else:
+        text_tags = ' '.join([f'#{item}' for item in tags])
+        await bot.send_message(chat_id=user.chat_id, text=f'Данные не найдены\n'
+                                                          f'Теги поиска: {text_tags}')
