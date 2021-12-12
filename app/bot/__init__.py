@@ -64,8 +64,9 @@ async def main_menu(message: types.Message, user: modules.user.schemas.UserBotFr
                                 '/start - Главное меню\n'
                                 '/add - Добавить новую запись\n'
                                 '/get - Посмотреть все свои записи\n'
-                                '/get <Номер записи> - Посмотреть в отдельности'
-                                '/del <Номер записи> - Удалить запись'
+                                '/get <Номер записи> - Посмотреть в отдельности\n'
+                                '/del <Номер записи> - Удалить запись\n'
+                                '/hide - отчистить историю сообщений\n'
                            )
 
 
@@ -120,6 +121,23 @@ async def del_record(message: types.Message, user: modules.user.schemas.UserBotF
         await bot.send_message(chat_id=user.chat_id, text='Запись удалена')
     else:
         await bot.send_message(chat_id=user.chat_id, text='Запись не найдена')
+
+
+@dp.message_handler(commands='hide')
+@auto_registration
+async def hide_all_message_history(message: types.Message, user: modules.user.schemas.UserBotFromDB):
+    await modules.user.MessageHistoryController(message).clear_history_bot()
+    await bot.send_message(chat_id=user.chat_id,
+                           text=f'BOT ID: {user.chat_id}\n'
+                                f'USERNAME: {user.username}\n'
+                                'Доступные команды:\n'
+                                '/start - Главное меню\n'
+                                '/add - Добавить новую запись\n'
+                                '/get - Посмотреть все свои записи\n'
+                                '/get <Номер записи> - Посмотреть в отдельности\n'
+                                '/del <Номер записи> - Удалить запись\n'
+                                '/hide - отчистить историю сообщений\n'
+                           )
 
 
 @dp.message_handler(regexp=bot_settings.SEARCH_TAGS_REGEX)
