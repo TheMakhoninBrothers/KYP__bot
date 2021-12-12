@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from aiogram.utils.exceptions import MessageToDeleteNotFound
+from aiogram.utils.exceptions import MessageToDeleteNotFound, MessageCantBeDeleted
 
 from app import db
 from .expire_messages_finder import ExpireMessagesFinder
@@ -12,7 +12,7 @@ async def delete_expire_message(bot, expire_message_time: timedelta):
     for message in messages:
         try:
             await bot.delete_message(chat_id=message.chat_id, message_id=message.message_id)
-        except MessageToDeleteNotFound:
+        except (MessageToDeleteNotFound, MessageCantBeDeleted):
             pass
     if messages:
         query = db.Session().query(db.UserHistory)
