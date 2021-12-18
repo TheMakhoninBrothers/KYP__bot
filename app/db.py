@@ -27,7 +27,7 @@ class TelegramUser(Base):
     id = sql.Column(sql.Integer, primary_key=True)
     username = sql.Column(sql.VARCHAR(255), nullable=True)
 
-    is_able = sql.Column(sql.Boolean, default=True, nullable=False)
+    inactive_at = sql.Column(sql.DateTime, nullable=True)
     telegram_id = sql.Column(sql.VARCHAR(10), nullable=False)
 
     created_at = sql.Column(sql.DateTime, default=datetime.now, nullable=False)

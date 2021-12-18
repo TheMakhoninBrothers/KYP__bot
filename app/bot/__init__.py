@@ -1,7 +1,8 @@
+from datetime import datetime
+
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils.exceptions import BotBlocked
 
-import new_patch
 from app import db
 from app import resourses as modules
 from configs import bot as bot_settings
@@ -48,7 +49,6 @@ def auto_registration(func):
 @dp.message_handler(commands='start')
 @auto_registration
 async def main_menu(message: types.Message, user: modules.user.schemas.UserBotFromDB):
-    await bot.send_message(chat_id=283782903, text='123')
     await bot.send_message(
         chat_id=user.chat_id,
         text=f'BOT ID: {user.chat_id}\n'
@@ -162,6 +162,6 @@ async def search_by_tags(message: types.Message, user: modules.user.schemas.User
 @dp.errors_handler(exception=BotBlocked)
 async def disable_user(update: types.Update, exc: BotBlocked):
     user: db.TelegramUser = db.Session().query(db.TelegramUser).filter_by(telegram_id=str(update.message.chat.id)).one()
-    user.is_able = False
+    user.inactive_at = datetime.now()
     db.Session().commit()
     return True
