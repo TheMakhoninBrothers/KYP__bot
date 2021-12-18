@@ -1,9 +1,5 @@
 #!/usr/bin/make
 
-PROJECT_NAME = bn24_mono
-USER = -u "$(shell id -u):$(shell id -g)"
-C = sh
-
 .PHONY: help migrate
 
 help:
