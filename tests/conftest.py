@@ -1,5 +1,7 @@
 import pytest
 
+from app.modules.helpers import WrongFormat
+
 
 class TestData:
 
@@ -9,7 +11,7 @@ class TestData:
 
 
 @pytest.fixture()
-def messages_for_search_by_tags():
+def positive__messages_for_search_by_tags():
     """Тестовые данные для поиска по тегам"""
     return (
         TestData('#SERVER', ['server']),
@@ -20,4 +22,31 @@ def messages_for_search_by_tags():
         TestData('serverhome', ['serverhome']),
         TestData('server home', ['server', 'home']),
         TestData('#server home #m9', ['server', 'home', 'm9']),
+    )
+
+
+@pytest.fixture()
+def negative__messages_for_search_by_tags():
+    """Тестовые данные для поиска по тегам"""
+    return (
+        TestData('/gets', WrongFormat),
+        TestData('server /add', WrongFormat)
+    )
+
+
+@pytest.fixture()
+def positive__messages_for_find_record_by_id():
+    """Тестовые данные для поиска по id"""
+    return (
+        TestData('/get', None),
+        TestData('/get 1', 1),
+    )
+
+
+@pytest.fixture()
+def negative__messages_for_find_record_by_id():
+    """Тестовые данные для поиска по id"""
+    return (
+        TestData('/get @', WrongFormat),
+        TestData('/get 1 2 3', WrongFormat),
     )
