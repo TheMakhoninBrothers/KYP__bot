@@ -1,7 +1,8 @@
+from datetime import datetime
+
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils.exceptions import BotBlocked
 
-import new_patch
 from app import db
 from app import resourses as modules
 from configs import bot as bot_settings
@@ -11,12 +12,9 @@ class ExtensionBot(Bot):
 
     async def send_message(self, *args, **kwargs) -> types.Message:
         kwargs['parse_mode'] = 'html'
-        try:
-            message = await super(ExtensionBot, self).send_message(*args, **kwargs)
-            await save_user_step(message)
-            return message
-        except BotBlocked:
-            pass
+        message = await super(ExtensionBot, self).send_message(*args, **kwargs)
+        await save_user_step(message)
+        return message
 
 
 async def save_user_step(message: types.Message):
@@ -31,17 +29,6 @@ async def save_user_step(message: types.Message):
 bot = ExtensionBot(token=bot_settings.TOKEN)
 
 dp = Dispatcher(bot)
-
-
-async def on_startup(dispatcher, url=None, cert=None):
-    for user in modules.user.repository.TelegramUserRepository.read_all():
-        await bot.send_message(chat_id=user.chat_id, text='Бот запущен')
-        await bot.send_message(chat_id=user.chat_id, text=new_patch.text)
-
-
-async def on_shutdown(dispatcher):
-    for user in modules.user.repository.TelegramUserRepository.read_all():
-        await bot.send_message(chat_id=user.chat_id, text='Бот выключился')
 
 
 def auto_registration(func):
@@ -62,17 +49,18 @@ def auto_registration(func):
 @dp.message_handler(commands='start')
 @auto_registration
 async def main_menu(message: types.Message, user: modules.user.schemas.UserBotFromDB):
-    await bot.send_message(chat_id=user.chat_id,
-                           text=f'BOT ID: {user.chat_id}\n'
-                                f'USERNAME: {user.username}\n'
-                                'Доступные команды:\n'
-                                '/start - Главное меню\n'
-                                '/add - Добавить новую запись\n'
-                                '/get - Посмотреть все свои записи\n'
-                                '/get <Номер записи> - Посмотреть в отдельности\n'
-                                '/del <Номер записи> - Удалить запись\n'
-                                '/hide - отчистить историю сообщений\n'
-                           )
+    await bot.send_message(
+        chat_id=user.chat_id,
+        text=f'BOT ID: {user.chat_id}\n'
+             f'USERNAME: {user.username}\n'
+             'Доступные команды:\n'
+             '/start - Главное меню\n'
+             '/add - Добавить новую запись\n'
+             '/get - Посмотреть все свои записи\n'
+             '/get {Номер записи} - Посмотреть в отдельности\n'
+             '/del {Номер записи} - Удалить запись\n'
+             '/hide - отчистить историю сообщений\n',
+    )
 
 
 @dp.message_handler(commands='add')
@@ -84,12 +72,16 @@ async def add_record(message: types.Message, user: modules.user.schemas.UserBotF
                                                chat_id=user.chat_id)
         new_record = modules.record.RecordRepository.create(record)
         if new_record:
-            await bot.send_message(chat_id=user.chat_id,
-                                   text=f'Запись успешно сохранена под номером: {new_record.id}')
+            await bot.send_message(
+                chat_id=user.chat_id,
+                text=f'Запись успешно сохранена под номером: {new_record.id}',
+            )
     else:
-        await bot.send_message(chat_id=user.chat_id,
-                               text='Вам нужно добавить текст после /add\n'
-                                    'Например: "/add Моя новая запись"')
+        await bot.send_message(
+            chat_id=user.chat_id,
+            text='Вам нужно добавить текст после /add\n'
+                 'Например: "/add Моя новая запись"',
+        )
 
 
 @dp.message_handler(commands='get')
@@ -132,17 +124,18 @@ async def del_record(message: types.Message, user: modules.user.schemas.UserBotF
 @auto_registration
 async def hide_all_message_history(message: types.Message, user: modules.user.schemas.UserBotFromDB):
     await modules.user.MessageHistoryController(message).clear_history_bot()
-    await bot.send_message(chat_id=user.chat_id,
-                           text=f'BOT ID: {user.chat_id}\n'
-                                f'USERNAME: {user.username}\n'
-                                'Доступные команды:\n'
-                                '/start - Главное меню\n'
-                                '/add - Добавить новую запись\n'
-                                '/get - Посмотреть все свои записи\n'
-                                '/get <Номер записи> - Посмотреть в отдельности\n'
-                                '/del <Номер записи> - Удалить запись\n'
-                                '/hide - отчистить историю сообщений\n'
-                           )
+    await bot.send_message(
+        chat_id=user.chat_id,
+        text=f'BOT ID: {user.chat_id}\n'
+             f'USERNAME: {user.username}\n'
+             'Доступные команды:\n'
+             '/start - Главное меню\n'
+             '/add - Добавить новую запись\n'
+             '/get - Посмотреть все свои записи\n'
+             '/get {Номер записи} - Посмотреть в отдельности\n'
+             '/del {Номер записи} - Удалить запись\n'
+             '/hide - отчистить историю сообщений\n',
+    )
 
 
 @dp.message_handler(regexp=bot_settings.SEARCH_TAGS_REGEX)
@@ -159,5 +152,16 @@ async def search_by_tags(message: types.Message, user: modules.user.schemas.User
         await bot.send_message(chat_id=user.chat_id, text=text)
     else:
         text_tags = ' '.join([f'#{item}' for item in tags])
-        await bot.send_message(chat_id=user.chat_id, text=f'Данные не найдены\n'
-                                                          f'Теги поиска: {text_tags}')
+        await bot.send_message(
+            chat_id=user.chat_id,
+            text=f'Данные не найдены\n'
+                 f'Теги поиска: {text_tags}',
+        )
+
+
+@dp.errors_handler(exception=BotBlocked)
+async def disable_user(update: types.Update, exc: BotBlocked):
+    user: db.TelegramUser = db.Session().query(db.TelegramUser).filter_by(telegram_id=str(update.message.chat.id)).one()
+    user.inactive_at = datetime.now()
+    db.Session().commit()
+    return True

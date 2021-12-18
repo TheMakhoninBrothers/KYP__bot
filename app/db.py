@@ -26,6 +26,8 @@ class TelegramUser(Base):
     __tablename__ = 'telegram_users'
     id = sql.Column(sql.Integer, primary_key=True)
     username = sql.Column(sql.VARCHAR(255), nullable=True)
+
+    inactive_at = sql.Column(sql.DateTime, nullable=True)
     telegram_id = sql.Column(sql.VARCHAR(10), nullable=False)
 
     created_at = sql.Column(sql.DateTime, default=datetime.now, nullable=False)
