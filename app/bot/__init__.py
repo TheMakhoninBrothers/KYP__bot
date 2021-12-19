@@ -6,6 +6,7 @@ from aiogram.utils.exceptions import BotBlocked, CantParseEntities
 from app import db
 from app.modules import user_module, user_record_module, helpers, base_exc
 from configs import bot as bot_settings
+from . import responses
 
 
 class ExtensionBot(Bot):
@@ -28,7 +29,7 @@ class ExtensionBot(Bot):
 
 
 async def save_user_step(message: types.Message):
-    """Сохранить информацию о сообщении"""
+    """Сохранение информации сообщения"""
     user_step = db.UserHistory(chat_id=message.chat.id,
                                message_id=message.message_id,
                                )
@@ -65,24 +66,14 @@ def auto_registration(func):
 @auto_registration
 async def main_menu(message: types.Message):
     """Главное меню"""
-    await bot.send_message(
-        chat_id=message.chat.id,
-        text=f'BOT ID: {message.chat.id}\n'
-             f'USERNAME: {message.chat.username}\n'
-             'Доступные команды:\n'
-             '/start - Главное меню\n'
-             '/add - Добавить новую запись\n'
-             '/get - Посмотреть все свои записи\n'
-             '/get {Номер записи} - Посмотреть в отдельности\n'
-             '/del {Номер записи} - Удалить запись\n'
-             '/hide - отчистить историю сообщений\n',
-    )
+    response = await responses.create_response_for__main_info(message.chat.id, message.chat.username)
+    await bot.send_message(chat_id=message.chat.id, text=response)
 
 
 @dp.message_handler(commands='add')
 @auto_registration
 async def add_record(message: types.Message):
-    """Добавить новую запись"""
+    """Добавление новой записи"""
     new_text = message.html_text[len('/add'):].strip()
     record = user_record_module.schemas.Record(text=new_text)
     new_record = user_record_module.UserRecordModule(str(message.chat.id)).add(record)
@@ -94,23 +85,30 @@ async def add_record(message: types.Message):
 
 @dp.message_handler(commands='get')
 @auto_registration
-async def get_records(message: types.Message):
-    """Показать все записи"""
+async def find_record(message: types.Message):
+    """Поиск записи по номеру"""
     record_id = helpers.parse_record_id('/get', message.text)
     if record_id:
         record = user_record_module.UserRecordModule(str(message.chat.id)).find(record_id)
         await message.reply(f'Запись {record.id}\n'
                             f'{record.text}')
     else:
-        records = user_record_module.UserRecordModule(str(message.chat.id)).find_all()
-        text = '\n\n'.join([f'Запись {record.id}\n{record.text}' for record in records])
-        await bot.send_message(chat_id=message.chat.id, text=text)
+        await find_records(message)
+
+
+@dp.message_handler(commands='get_all')
+@auto_registration
+async def find_records(message: types.Message):
+    """Поиск всех записей"""
+    records = user_record_module.UserRecordModule(str(message.chat.id)).find_all()
+    response = await responses.create_response_for__records(records)
+    await bot.send_message(chat_id=message.chat.id, text=response)
 
 
 @dp.message_handler(commands='del')
 @auto_registration
 async def del_record(message: types.Message):
-    """Удалить запись"""
+    """Удаление записи по номеру"""
     record_id = helpers.parse_record_id('/del', message.text)
     user_record_module.UserRecordModule(str(message.chat.id)).delete(record_id)
     await bot.send_message(chat_id=message.chat.id, text='Запись удалена')
@@ -118,21 +116,11 @@ async def del_record(message: types.Message):
 
 @dp.message_handler(commands='hide')
 @auto_registration
-async def hide_all_message_history(message: types.Message, user: user_module.schemas.UserBotFromDB):
-    """Спрятать все сообщения"""
+async def del_all_message_history(message: types.Message):
+    """Удаление всех сообщений"""
     await user_module.MessageHistoryController(message).clear_history_bot()
-    await bot.send_message(
-        chat_id=user.chat_id,
-        text=f'BOT ID: {user.chat_id}\n'
-             f'USERNAME: {user.username}\n'
-             'Доступные команды:\n'
-             '/start - Главное меню\n'
-             '/add - Добавить новую запись\n'
-             '/get - Посмотреть все свои записи\n'
-             '/get {Номер записи} - Посмотреть в отдельности\n'
-             '/del {Номер записи} - Удалить запись\n'
-             '/hide - отчистить историю сообщений\n',
-    )
+    response = await responses.create_response_for__main_info(message.chat.id, message.chat.username)
+    await bot.send_message(chat_id=message.chat.id, text=response)
 
 
 @dp.message_handler(regexp=bot_settings.SEARCH_TAGS_REGEX)

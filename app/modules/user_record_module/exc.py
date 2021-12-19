@@ -6,6 +6,7 @@ class RecordNotFounded(NoResultFound):
 
     @property
     def message(self):
+        """Сообщение об ошибке"""
         if self.args:
             return f'Запись {self.args[0]} не найдена'
         return f'Запись не найдена'

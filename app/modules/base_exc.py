@@ -26,10 +26,8 @@ class CommandDoesNotExist(ValueError):
     @property
     def message(self):
         """Сообщение об ошибке"""
-
         if self.args:
             return f'Команда {self.args[0]} недоступна в боте.\n' \
                    'Ознакомиться с командами можно, перейдя по /start'
-
         return 'Такая команда недоступна в боте.\n' \
                'Ознакомиться с командами можно, перейдя по /start'

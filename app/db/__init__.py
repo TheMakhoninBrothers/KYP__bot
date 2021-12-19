@@ -37,6 +37,7 @@ class TelegramUser(Base):
 
 
 class Record(Base):
+    """Запись пользователя"""
     __tablename__ = 'records'
     id = sql.Column(sql.Integer, primary_key=True)
     text = sql.Column(sql.VARCHAR(3000), nullable=False)

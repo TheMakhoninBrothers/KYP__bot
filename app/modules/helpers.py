@@ -2,7 +2,7 @@ import re
 import typing
 
 from configs.bot import SEARCH_TAGS_REGEX
-from .base_exc import CommandNotFounded, WrongFormat, CommandDoesNotExist
+from .base_exc import CommandNotFounded, WrongFormat
 
 
 def parse_tags(message_text: str, pattern: typing.Optional[str] = None):
