@@ -6,8 +6,8 @@ from aiogram.utils.exceptions import MessageToDeleteNotFound, MessageCantBeDelet
 from app import db
 
 
-class MessageHistoryController:
-    """Класс для управления историей сообщений пользователя."""
+class UserHistoryCleaner:
+    """Отчистка истории сообщений пользователей"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -17,7 +17,7 @@ class MessageHistoryController:
             chat_id: typing.Optional[str] = None,
             expire_time: typing.Optional[datetime] = None,
     ):
-        """Отчистить историю сообщений"""
+        """Удаление сообщений в приватной беседе пользователей"""
         query = db.Session().query(db.UserHistory)
         if chat_id:
             query = query.filter(db.UserHistory.chat_id == chat_id)

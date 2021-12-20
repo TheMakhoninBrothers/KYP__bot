@@ -1,24 +1,17 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
-from aiogram.utils.exceptions import MessageToDeleteNotFound, MessageCantBeDeleted
-
-from app import db
-from .expire_messages_finder import ExpireMessagesFinder
+from app.modules.user_module.message_history_cleaner import UserHistoryCleaner
 
 
-async def delete_expire_message(bot, expire_message_time: timedelta):
-    """Удалить все просроченные сообщения"""
-    messages = ExpireMessagesFinder(expire_message_time).search()
-    for message in messages:
-        try:
-            await bot.delete_message(chat_id=message.chat_id, message_id=message.message_id)
-        except (MessageToDeleteNotFound, MessageCantBeDeleted):
-            pass
-    if messages:
-        query = db.Session().query(db.UserHistory)
-        query = query.filter(db.UserHistory.message_id.in_([message.message_id for message in messages]))
-        if query.all():
-            query.delete()
+def __calculate_expire_rim(expire_delta):
+    """Подсчёт даты срока хранения сообщений"""
+    return datetime.now() - expire_delta
 
 
-__all__ = ['delete_expire_message']
+async def delete_expire_messages(bot, expire_message_time: timedelta):
+    """Удаление всех просроченных сообщений"""
+    expire_time = __calculate_expire_rim(expire_message_time)
+    await UserHistoryCleaner(bot).clear_user_history(expire_time=expire_time)
+
+
+__all__ = ['delete_expire_messages']
