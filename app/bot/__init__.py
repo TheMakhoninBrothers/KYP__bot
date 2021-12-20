@@ -118,7 +118,7 @@ async def del_record(message: types.Message):
 @auto_registration
 async def del_all_message_history(message: types.Message):
     """Удаление всех сообщений"""
-    await user_module.MessageHistoryController(message).clear_history_bot()
+    await user_module.MessageHistoryController(message.bot).clear_user_history(chat_id=str(message.chat.id))
     response = await responses.create_response_for__main_info(message.chat.id, message.chat.username)
     await bot.send_message(chat_id=message.chat.id, text=response)
 
