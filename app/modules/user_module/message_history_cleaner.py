@@ -7,7 +7,7 @@ from app import db
 
 
 class UserHistoryCleaner:
-    """Отчистка истории сообщений пользователей"""
+    """Очистка истории сообщений пользователей"""
 
     def __init__(self, bot):
         self.bot = bot

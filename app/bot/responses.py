@@ -13,7 +13,7 @@ async def create_response_for__main_info(chat_id: str, username: typing.Optional
            '/get - Посмотреть все свои записи\n' \
            '/get {Номер записи} - Посмотреть в отдельности\n' \
            '/del {Номер записи} - Удалить запись\n' \
-           '/hide - отчистить историю сообщений\n'
+           '/hide - очистить историю сообщений\n'
 
 
 async def create_response_for__records(records: typing.List[RecordFromDB]) -> str:

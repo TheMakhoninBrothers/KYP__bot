@@ -6,7 +6,7 @@ from configs import bot as bot_configs
 
 
 async def run():
-    """Запускает расписание"""
+    """Запуск расписания"""
     while True:
         await delete_expire_messages(
             bot=app.bot.bot,
