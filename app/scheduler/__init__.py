@@ -1,11 +1,15 @@
-import schedule
+import asyncio
 
-from . import jobs
+import app.bot
+from app.scheduler.jobs import delete_expire_messages
+from configs import bot as bot_configs
 
 
-def add_all_jobs(bot, configs):
-    """Добавить все задачи в расписание."""
-    schedule.every(1).seconds.do(jobs.delete_expire_message,
-                                 bot=bot,
-                                 expire_message_time=configs.MESSAGE_EXPIRE_TIME,
-                                 )
+async def run():
+    """Запуск расписания"""
+    while True:
+        await delete_expire_messages(
+            bot=app.bot.bot,
+            expire_message_time=bot_configs.MESSAGE_EXPIRE_TIME,
+        )
+        await asyncio.sleep(2)
