@@ -18,14 +18,14 @@ class UserHistoryCleaner:
             expire_time: typing.Optional[datetime] = None,
     ):
         """Удаление сообщений в приватной беседе пользователей"""
-        query = db.Session().query(db.UserHistory)
+        query = db.Session().query(db.UserPrivateMessage).join(db.TelegramUser)
         if chat_id:
-            query = query.filter(db.UserHistory.chat_id == chat_id)
+            query = query.filter(db.TelegramUser.chat_id == chat_id)
         if expire_time:
-            query = query.filter(db.UserHistory.create_at < expire_time)
+            query = query.filter(db.UserPrivateMessage.created_at < expire_time)
         await self._delete_messages(query.all())
 
-    async def _delete_messages(self, messages: typing.List[db.UserHistory]):
+    async def _delete_messages(self, messages: typing.List[db.UserPrivateMessage]):
         """
         Удаление сообщений в:
          - истории сообщений в боте
@@ -33,7 +33,7 @@ class UserHistoryCleaner:
         """
         for message in messages:
             try:
-                await self.bot.delete_message(chat_id=message.chat_id, message_id=message.message_id)
+                await self.bot.delete_message(chat_id=message.user.chat_id, message_id=message.message_id)
             except (MessageToDeleteNotFound, MessageCantBeDeleted):
                 pass
             finally:
