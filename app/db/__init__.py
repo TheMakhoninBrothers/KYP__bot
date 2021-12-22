@@ -8,7 +8,7 @@ from configs.db import DB_URL
 
 
 def create_scoped_session(db_url: str):
-    """Создать фабрику сессий"""
+    """Создание фабрику сессий"""
     engine = sql.create_engine(db_url)
     return scoped_session(sessionmaker(bind=engine))
 
@@ -29,7 +29,7 @@ class User(Base):
 
 
 class TelegramUser(Base):
-    """Пользователь авторизованный в телеграмм"""
+    """Пользователь, авторизованный в телеграмм"""
     __tablename__ = 'telegram_users'
 
     id = sql.Column(sql.Integer, primary_key=True)
