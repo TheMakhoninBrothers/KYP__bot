@@ -18,4 +18,6 @@ async def create_response_for__main_info(chat_id: str, username: typing.Optional
 
 async def create_response_for__records(records: typing.List[RecordFromDB]) -> str:
     """Создание ответа для списка записей"""
-    return '\n\n'.join([f'Запись {record.id}\n{record.text}' for record in records])
+    if records:
+        return '\n\n'.join([f'Запись {record.id}\n{record.text}' for record in records])
+    return 'У вас нет записей'
