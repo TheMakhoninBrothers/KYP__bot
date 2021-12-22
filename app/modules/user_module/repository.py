@@ -13,13 +13,10 @@ class TelegramUserRepository:
 
     @classmethod
     def create(cls, user: UserBot) -> typing.Optional[UserBotFromDB]:
-        if not cls.is_exist(chat_id=user.chat_id):
-            new_user = db.User()
-            new_user_from_bot = db.TelegramUser(chat_id=user.chat_id, username=user.username)
-            new_user_from_bot.user = new_user
-            db.Session().add(new_user_from_bot)
-            db.Session().commit()
-            return cls.read(chat_id=user.chat_id)
+        telegram_user = db.TelegramUser(chat_id=user.chat_id, username=user.username, user=db.User())
+        db.Session().add(telegram_user)
+        db.Session().commit()
+        return UserBotFromDB(id=telegram_user.id, **user.dict())
 
     @classmethod
     def read(cls, chat_id: int) -> typing.Optional[UserBotFromDB]:
