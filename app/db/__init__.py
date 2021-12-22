@@ -8,7 +8,7 @@ from configs.db import DB_URL
 
 
 def create_scoped_session(db_url: str):
-    """Создание фабрику сессий"""
+    """Создание фабрики сессий"""
     engine = sql.create_engine(db_url)
     return scoped_session(sessionmaker(bind=engine))
 
