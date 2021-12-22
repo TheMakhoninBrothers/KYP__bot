@@ -49,7 +49,7 @@ class ExtensionBot(Bot):
 
 async def save_user_step(message: types.Message):
     """Сохранение информации сообщения"""
-    user = db.Session().query(db.TelegramUser).filter_by(chat_id=message.chat.id).one()
+    user = db.Session().query(db.UserFromTelegram).filter_by(chat_id=message.chat.id).one()
     user_step = db.UserPrivateMessage(user=user, message_id=message.message_id)
     db.Session().add(user_step)
     db.Session().commit()
@@ -134,7 +134,7 @@ async def search_by_tags(message: types.Message):
 @dp.errors_handler(exception=BotBlocked)
 async def disable_user(update: types.Update, _):
     """Пометить как неактивный пользователь"""
-    user: db.TelegramUser = db.Session().query(db.TelegramUser).filter_by(chat_id=update.message.chat.id).one()
+    user: db.UserFromTelegram = db.Session().query(db.UserFromTelegram).filter_by(chat_id=update.message.chat.id).one()
     user.inactive_at = datetime.now()
     db.Session().commit()
     return True

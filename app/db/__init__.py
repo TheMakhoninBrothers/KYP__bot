@@ -25,10 +25,10 @@ class User(Base):
     id = sql.Column(sql.Integer, primary_key=True)
     created_at = sql.Column(sql.DateTime, default=datetime.now(), nullable=False)
     updated_at = sql.Column(sql.DateTime, default=None, onupdate=datetime.now)
-    telegram_data = relationship('TelegramUser', uselist=False)
+    telegram_data = relationship('UserFromTelegram', uselist=False)
 
 
-class TelegramUser(Base):
+class UserFromTelegram(Base):
     """Пользователь, авторизованный в телеграмм"""
     __tablename__ = 'users_from_telegram'
 
@@ -65,4 +65,4 @@ class UserPrivateMessage(Base):
     created_at = sql.Column(sql.DateTime, default=datetime.now, nullable=False)
     updated_at = sql.Column(sql.DateTime, default=None, onupdate=datetime.now)
 
-    user = relationship('TelegramUser', backref=backref('steps'))
+    user = relationship('UserFromTelegram', backref=backref('steps'))
