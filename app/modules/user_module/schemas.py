@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 class UserBot(BaseModel):
     """Пользователь телеграмм бота"""
-    chat_id: str
+    chat_id: int
     username: typing.Optional[str]
 
 

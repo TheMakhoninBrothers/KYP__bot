@@ -14,13 +14,13 @@ class UserRecordModule:
     Чтение и сохранение записей пользователя.
     """
 
-    def __init__(self, chat_id: str):
+    def __init__(self, chat_id: int):
         self._chat_id = chat_id
-        self._user = queries.find_telegram_user_by__chat_id(chat_id).one()
+        self._user: db.User = queries.find_user_by__chat_id(chat_id).one()
 
     def add(self, record: Record) -> RecordFromDB:
         """Добавление записи пользователем"""
-        new_record = db.Record(user_id=self._user.id, text=record.text)
+        new_record = db.Record(user=self._user, text=record.text)
         db.Session().add(new_record)
         db.Session().commit()
         return RecordFromDB(id=new_record.id, **record.dict())
