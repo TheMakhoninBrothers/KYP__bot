@@ -23,22 +23,23 @@ class User(Base):
     __tablename__ = 'users'
 
     id = sql.Column(sql.Integer, primary_key=True)
-    created_at = sql.Column(sql.DateTime, default=datetime.now())
-    updated_at = sql.Column(sql.DateTime, default=None, onupdate=datetime.now, nullable=True)
-    telegram_data = relationship('TelegramUser', backref='general_data', uselist=False)
+    created_at = sql.Column(sql.DateTime, default=datetime.now(), nullable=False)
+    updated_at = sql.Column(sql.DateTime, default=None, onupdate=datetime.now)
+    telegram_data = relationship('UserFromTelegram', uselist=False)
 
 
-class TelegramUser(Base):
+class UserFromTelegram(Base):
     """Пользователь, авторизованный в телеграмм"""
-    __tablename__ = 'telegram_users'
+    __tablename__ = 'users_from_telegram'
 
     id = sql.Column(sql.Integer, primary_key=True)
-    username = sql.Column(sql.VARCHAR(255), nullable=True)
-    chat_id = sql.Column(sql.NUMERIC(10))
-    user_id = sql.Column(sql.Integer, sql.ForeignKey('users.id', ondelete='CASCADE'))
-    inactive_at = sql.Column(sql.DateTime, nullable=True)
-    created_at = sql.Column(sql.DateTime, default=datetime.now)
-    updated_at = sql.Column(sql.DateTime, default=None, onupdate=datetime.now, nullable=True)
+    username = sql.Column(sql.VARCHAR(255), unique=True)
+    chat_id = sql.Column(sql.NUMERIC(10), nullable=False, unique=True)
+    user_id = sql.Column(sql.Integer, sql.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    inactive_at = sql.Column(sql.DateTime)
+    created_at = sql.Column(sql.DateTime, default=datetime.now, nullable=False)
+    updated_at = sql.Column(sql.DateTime, default=None, onupdate=datetime.now)
+    user = relationship('User', uselist=False)
 
 
 class Record(Base):
@@ -46,10 +47,10 @@ class Record(Base):
     __tablename__ = 'records'
 
     id = sql.Column(sql.Integer, primary_key=True)
-    text = sql.Column(sql.VARCHAR(3000))
-    user_id = sql.Column(sql.Integer, sql.ForeignKey('users.id', ondelete='CASCADE'))
-    created_at = sql.Column(sql.DateTime, default=datetime.now)
-    updated_at = sql.Column(sql.DateTime, default=None, onupdate=datetime.now, nullable=True)
+    text = sql.Column(sql.VARCHAR(3000), nullable=False)
+    user_id = sql.Column(sql.Integer, sql.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    created_at = sql.Column(sql.DateTime, default=datetime.now, nullable=False)
+    updated_at = sql.Column(sql.DateTime, default=None, onupdate=datetime.now)
 
     user = relationship('User', backref=backref('records'))
 
@@ -59,9 +60,9 @@ class UserPrivateMessage(Base):
     __tablename__ = 'user_private_messages'
 
     id = sql.Column(sql.Integer, primary_key=True)
-    message_id = sql.Column(sql.Integer)
-    user_id = sql.Column(sql.Integer, sql.ForeignKey('telegram_users.id', ondelete='CASCADE'))
-    created_at = sql.Column(sql.DateTime, default=datetime.now)
-    updated_at = sql.Column(sql.DateTime, default=None, onupdate=datetime.now, nullable=True)
+    message_id = sql.Column(sql.Integer, nullable=False)
+    user_id = sql.Column(sql.Integer, sql.ForeignKey('users_from_telegram.id', ondelete='CASCADE'), nullable=False)
+    created_at = sql.Column(sql.DateTime, default=datetime.now, nullable=False)
+    updated_at = sql.Column(sql.DateTime, default=None, onupdate=datetime.now)
 
-    user = relationship('TelegramUser', backref=backref('steps'))
+    user = relationship('UserFromTelegram', backref=backref('steps'))

@@ -1,12 +1,31 @@
 from datetime import datetime
 
 from aiogram import Bot, Dispatcher, types
+from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.utils.exceptions import BotBlocked, CantParseEntities
 
 from app import db
 from app.modules import user_module, user_record_module, helpers, base_exc
 from configs import bot as bot_settings
 from . import responses
+
+
+class RegistrationUser(BaseMiddleware):
+    """Автоматическая регистрация пользователей"""
+
+    async def on_process_message(self, message: types.Message, data: dict):
+        """Выполнить"""
+        if not user_module.TelegramUserRepository.is_exist(message.chat.id):
+            user = user_module.schemas.UserBot(username=message.chat.username, chat_id=message.chat.id)
+            user_module.TelegramUserRepository.create(user)
+
+
+class SaveUserMessage(BaseMiddleware):
+    """Сохранение сообщений от пользователя"""
+
+    async def on_process_message(self, message: types.Message, data: dict):
+        """Выполнить"""
+        await save_user_step(message)
 
 
 class ExtensionBot(Bot):
@@ -30,7 +49,7 @@ class ExtensionBot(Bot):
 
 async def save_user_step(message: types.Message):
     """Сохранение информации сообщения"""
-    user = db.Session().query(db.TelegramUser).filter_by(chat_id=message.chat.id).one()
+    user = db.Session().query(db.UserFromTelegram).filter_by(chat_id=message.chat.id).one()
     user_step = db.UserPrivateMessage(user=user, message_id=message.message_id)
     db.Session().add(user_step)
     db.Session().commit()
@@ -40,29 +59,11 @@ async def save_user_step(message: types.Message):
 bot = ExtensionBot(token=bot_settings.TOKEN)
 
 dp = Dispatcher(bot)
-
-
-def auto_registration(func):
-    """
-    Автоматическая регистрация пользователей.
-    Сохранение сообщений пользователя.
-    Аналог Middleware.
-    """
-
-    async def decorator(message: types.Message):
-        # Авто регистрация
-        if not user_module.TelegramUserRepository.is_exist(message.chat.id):
-            user = user_module.schemas.UserBot(username=message.chat.username, chat_id=message.chat.id)
-            user_module.TelegramUserRepository.create(user)
-        # Сохранить сообщение пользователя
-        await save_user_step(message)
-        return await func(message)
-
-    return decorator
+dp.middleware.setup(RegistrationUser())
+dp.middleware.setup(SaveUserMessage())
 
 
 @dp.message_handler(commands='start')
-@auto_registration
 async def main_menu(message: types.Message):
     """Главное меню"""
     response = await responses.create_response_for__main_info(message.chat.id, message.chat.username)
@@ -70,7 +71,6 @@ async def main_menu(message: types.Message):
 
 
 @dp.message_handler(commands='add')
-@auto_registration
 async def add_record(message: types.Message):
     """Добавление новой записи"""
     new_text = message.html_text[len('/add'):].strip()
@@ -83,7 +83,6 @@ async def add_record(message: types.Message):
 
 
 @dp.message_handler(commands='get')
-@auto_registration
 async def find_record(message: types.Message):
     """Поиск записи по номеру"""
     record_id = helpers.parse_record_id('/get', message.text)
@@ -96,7 +95,6 @@ async def find_record(message: types.Message):
 
 
 @dp.message_handler(commands='get_all')
-@auto_registration
 async def find_records(message: types.Message):
     """Поиск всех записей"""
     records = user_record_module.UserRecordModule(message.chat.id).find_all()
@@ -105,7 +103,6 @@ async def find_records(message: types.Message):
 
 
 @dp.message_handler(commands='del')
-@auto_registration
 async def del_record(message: types.Message):
     """Удаление записи по номеру"""
     record_id = helpers.parse_record_id('/del', message.text)
@@ -114,7 +111,6 @@ async def del_record(message: types.Message):
 
 
 @dp.message_handler(commands='hide')
-@auto_registration
 async def del_all_message_history(message: types.Message):
     """Удаление всех сообщений"""
     await user_module.UserHistoryCleaner(message.bot).clear_user_history(chat_id=message.chat.id)
@@ -123,7 +119,6 @@ async def del_all_message_history(message: types.Message):
 
 
 @dp.message_handler(regexp=bot_settings.SEARCH_TAGS_REGEX)
-@auto_registration
 async def search_by_tags(message: types.Message):
     """Поиск записей по тегам"""
     tags = helpers.parse_tags(message.text, bot_settings.SEARCH_TAGS_REGEX)
@@ -139,7 +134,7 @@ async def search_by_tags(message: types.Message):
 @dp.errors_handler(exception=BotBlocked)
 async def disable_user(update: types.Update, _):
     """Пометить как неактивный пользователь"""
-    user: db.TelegramUser = db.Session().query(db.TelegramUser).filter_by(chat_id=update.message.chat.id).one()
+    user: db.UserFromTelegram = db.Session().query(db.UserFromTelegram).filter_by(chat_id=update.message.chat.id).one()
     user.inactive_at = datetime.now()
     db.Session().commit()
     return True
