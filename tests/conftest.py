@@ -4,6 +4,7 @@ from app.modules.helpers import WrongFormat
 
 
 class TestData:
+    """Тестовые данные"""
 
     def __init__(self, input_data, output_data):
         self.input = input_data
@@ -22,6 +23,49 @@ def positive__messages_for_search_by_tags():
         TestData('serverhome', ['serverhome']),
         TestData('server home', ['server', 'home']),
         TestData('#server home #m9', ['server', 'home', 'm9']),
+    )
+
+
+@pytest.fixture()
+def positive__messages_for_parse_tags():
+    """Тестовые данные для поиска по тегам"""
+    return (
+        TestData(
+            '/add server work',
+            []
+        ),
+        TestData(
+            '/add #server #work',
+            ['server', 'work']
+        ),
+        TestData(
+            '/add #Server #Work',
+            ['server', 'work']
+        ),
+        TestData(
+            '/add #SERVER #WORK',
+            ['server', 'work']
+        ),
+        TestData(
+            '/add #server#work',
+            ['server', 'work']
+        ),
+        TestData(
+            '/add #server #work working server with apps',
+            ['server', 'work']
+        ),
+        TestData(
+            '/add #server #work working server with #test apps',
+            ['server', 'work', 'test']
+        ),
+        TestData(
+            '/add #server #work working server with #test apps username@megahost <>12345678<>',
+            ['server', 'work', 'test']
+        ),
+        TestData(
+            '/add #server #work working server with #test apps username@megahost <>1#234#5678<> #credential',
+            ['server', 'work', 'test', 'credential']
+        )
     )
 
 
