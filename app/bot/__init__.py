@@ -1,11 +1,12 @@
 from datetime import datetime
 
 from aiogram import Bot, Dispatcher, types
+from aiogram.dispatcher import filters
 from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.utils.exceptions import BotBlocked, CantParseEntities
 
 from app import db
-from app.modules import user_module, user_record_module, helpers, base_exc
+from app.modules import user_module, user_record_module, helpers, base_exc, message_parsers
 from configs import bot as bot_settings
 from . import responses
 
@@ -73,8 +74,7 @@ async def main_menu(message: types.Message):
 @dp.message_handler(commands='add')
 async def add_record(message: types.Message):
     """Добавление новой записи"""
-    new_text = message.html_text[len('/add'):].strip()
-    record = user_record_module.schemas.Record(text=new_text)
+    record = message_parsers.parse_message__add_record(message)
     new_record = user_record_module.UserRecordModule(message.chat.id).add(record)
     await bot.send_message(
         chat_id=message.chat.id,
@@ -88,8 +88,8 @@ async def find_record(message: types.Message):
     record_id = helpers.parse_record_id('/get', message.text)
     if record_id:
         record = user_record_module.UserRecordModule(message.chat.id).find(record_id)
-        await message.reply(f'Запись {record.id}\n'
-                            f'{record.text}')
+        response = await responses.create_response_for__record(record)
+        await bot.send_message(chat_id=message.chat.id, text=response)
     else:
         await find_records(message)
 
@@ -118,17 +118,19 @@ async def del_all_message_history(message: types.Message):
     await bot.send_message(chat_id=message.chat.id, text=response)
 
 
-@dp.message_handler(regexp=bot_settings.SEARCH_TAGS_REGEX)
+@dp.message_handler(filters.RegexpCommandsFilter(''))
+async def unknown_commands(message: types.Message):
+    """Перехват не знакомых команд"""
+    await bot.send_message(chat_id=message.chat.id, text=f'Команда {message.text!r} не существует')
+
+
+@dp.message_handler(filters.Regexp(bot_settings.SEARCH_TAGS_REGEX))
 async def search_by_tags(message: types.Message):
     """Поиск записей по тегам"""
-    tags = helpers.parse_tags(message.text, bot_settings.SEARCH_TAGS_REGEX)
-    records = user_record_module.UserRecordModule(message.chat.id).find_all(
-        text=[f'#{tag}' for tag in tags])
-    if records:
-        text = '\n\n'.join([f'Запись {record.id}\n{record.text}' for record in records])
-    else:
-        text = f'Записи по тегам {"# ".join(tags)} не найдены'
-    await bot.send_message(chat_id=message.chat.id, text=text)
+    tags = message_parsers.parse_message__search_by_tags(message)
+    records = user_record_module.UserRecordModule(message.chat.id).find_all(tags=tags)
+    response = await responses.create_response_for__search_by_tags(records, tags)
+    await bot.send_message(chat_id=message.chat.id, text=response)
 
 
 @dp.errors_handler(exception=BotBlocked)
