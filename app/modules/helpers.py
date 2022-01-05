@@ -1,17 +1,6 @@
-import re
 import typing
 
-from configs.bot import SEARCH_TAGS_REGEX
 from .base_exc import CommandNotFounded, WrongFormat
-
-
-def parse_tags(message_text: str, pattern: typing.Optional[str] = None):
-    """Парсинг тегов в строке"""
-    if '/' in message_text:
-        raise WrongFormat(message_text)
-    pattern = pattern or SEARCH_TAGS_REGEX
-    sub_strings = re.findall(fr'{pattern}', message_text)
-    return [item.replace('#', '').lower() for item in sub_strings]
 
 
 def parse_record_id(command: str, text: str) -> typing.Optional[int]:
