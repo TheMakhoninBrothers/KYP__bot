@@ -25,7 +25,6 @@ class User(Base):
     id = sql.Column(sql.Integer, primary_key=True)
     created_at = sql.Column(sql.DateTime, default=datetime.now(), nullable=False)
     updated_at = sql.Column(sql.DateTime, default=None, onupdate=datetime.now)
-    telegram_data = relationship('UserFromTelegram', uselist=False)
 
 
 class UserFromTelegram(Base):
@@ -39,7 +38,18 @@ class UserFromTelegram(Base):
     inactive_at = sql.Column(sql.DateTime)
     created_at = sql.Column(sql.DateTime, default=datetime.now, nullable=False)
     updated_at = sql.Column(sql.DateTime, default=None, onupdate=datetime.now)
-    user = relationship('User', uselist=False)
+    user = relationship('User', backref=backref('telegram', uselist=False), uselist=False)
+
+
+records_tags_link = sql.Table(
+    'pivot_records_tags',
+    Base.metadata,
+    sql.Column('record_id', sql.ForeignKey('records.id')),
+    sql.Column('tag_id', sql.ForeignKey('tags.id')),
+    sql.Column('created_at', sql.DateTime, default=datetime.now, nullable=False),
+    sql.Column('updated_at', sql.DateTime, default=None, onupdate=datetime.now),
+    sql.PrimaryKeyConstraint('record_id', 'tag_id'),
+)
 
 
 class Record(Base):
@@ -51,8 +61,24 @@ class Record(Base):
     user_id = sql.Column(sql.Integer, sql.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     created_at = sql.Column(sql.DateTime, default=datetime.now, nullable=False)
     updated_at = sql.Column(sql.DateTime, default=None, onupdate=datetime.now)
-
+    tags = relationship('Tag', backref=backref('records'), secondary=records_tags_link)
     user = relationship('User', backref=backref('records'))
+
+
+class Tag(Base):
+    """Тэг пользователя"""
+    __tablename__ = 'tags'
+
+    id = sql.Column(sql.Integer, primary_key=True)
+    user_id = sql.Column(sql.Integer, sql.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    name = sql.Column(sql.VARCHAR(100), nullable=False)
+    created_at = sql.Column(sql.DateTime, default=datetime.now, nullable=False)
+    updated_at = sql.Column(sql.DateTime, default=None, onupdate=datetime.now)
+
+    __table_args__ = \
+        (
+            sql.UniqueConstraint('user_id', 'name', name='_user_tag_uc'),
+        )
 
 
 class UserPrivateMessage(Base):

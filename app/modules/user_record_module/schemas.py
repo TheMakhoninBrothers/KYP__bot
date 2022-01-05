@@ -1,8 +1,10 @@
 from pydantic import BaseModel
+import typing
 
 
 class Record(BaseModel):
     """Сохранённая запись пользователя"""
+    tags: typing.List[str]
     text: str
 
 
