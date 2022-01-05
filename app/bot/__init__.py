@@ -118,7 +118,7 @@ async def del_all_message_history(message: types.Message):
     await bot.send_message(chat_id=message.chat.id, text=response)
 
 
-@dp.message_handler(filters.RegexpCommandsFilter(''))
+@dp.message_handler(filters.RegexpCommandsFilter([r'\/']))
 async def unknown_commands(message: types.Message):
     """Перехват не знакомых команд"""
     await bot.send_message(chat_id=message.chat.id, text=f'Команда {message.text!r} не существует')
