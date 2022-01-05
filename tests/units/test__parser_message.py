@@ -14,6 +14,10 @@ testdata = \
         (
             '/add #server #work working server with apps',
             ['server', 'work']
+        ),
+        (
+            '/add #server #server #work working server with apps',
+            ['server', 'work']
         )
     ]
 
@@ -24,7 +28,7 @@ def test_positive__parse_tags(message: str, expected: typing.List[str]):
     Позитивный тест.
     Парсер тегов.
     """
-    assert message_parsers.parse_tags(message) == expected
+    assert set(message_parsers.parse_tags(message)) == set(expected)
 
 
 testdata = \
@@ -37,6 +41,9 @@ testdata = \
         ),
         (
             'server test', ['server', 'test']
+        ),
+        (
+            'server server', ['server']
         )
     ]
 
@@ -50,7 +57,7 @@ def test_positive__search_by_tags(message: str, expected: typing.List[str]):
     :return:
     """
     message = Message(text=message, html_text=message)
-    assert message_parsers.parse_message__search_by_tags(message) == expected
+    assert set(message_parsers.parse_message__search_by_tags(message)) == set(expected)
 
 
 testdata = \

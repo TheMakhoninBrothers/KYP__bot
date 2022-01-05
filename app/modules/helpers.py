@@ -15,3 +15,8 @@ def parse_record_id(command: str, text: str) -> typing.Optional[int]:
         return int(text[count_command_letters:].strip())
     except ValueError:
         raise WrongFormat(text)
+
+
+def delete_duplicate_items(items: typing.List[typing.Any]):
+    """Убрать дубликаты из списка"""
+    return list(set(items))

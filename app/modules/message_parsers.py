@@ -3,6 +3,7 @@ import typing
 
 from aiogram.types import Message
 
+from .helpers import delete_duplicate_items
 from .user_record_module.schemas import Record
 
 TAGS_PATTERN = r'(#\w+)|(<>.+<>)'
@@ -26,6 +27,7 @@ def parse_tags(message: str) -> typing.List[str]:
 def serialize_tags(tags: typing.List[str]) -> typing.List[str]:
     """Привести теги к единому формату"""
     handled_data = []
+    tags = delete_duplicate_items(tags)
     for tag in tags:
         if tag:
             tag = tag.replace('#', '')
@@ -60,4 +62,4 @@ def parse_message__add_record(message: Message) -> Record:
 def parse_message__search_by_tags(message: Message) -> typing.List[str]:
     """Парсинг тегов в строке"""
     sub_strings = re.findall(SEARCH_TAGS_PATTERN, message.text)
-    return sub_strings
+    return serialize_tags(sub_strings)
