@@ -25,8 +25,8 @@ testdata = \
 @pytest.mark.parametrize('message,expected', testdata)
 def test_positive__parse_tags(message: str, expected: typing.List[str]):
     """
-    Позитивный тест.
-    Парсер тегов.
+    Позитивный тест
+    Парсер тегов
     """
     assert set(message_parsers.parse_tags(message)) == set(expected)
 
@@ -53,8 +53,6 @@ def test_positive__search_by_tags(message: str, expected: typing.List[str]):
     """
     Позитивный тест
     Парсер сообщения для поиска по тегам
-    :param positive_parse_message__search_by_tags:
-    :return:
     """
     message = Message(text=message, html_text=message)
     assert set(message_parsers.parse_message__search_by_tags(message)) == set(expected)
@@ -70,4 +68,8 @@ testdata = \
 
 @pytest.mark.parametrize('message,expected', testdata)
 def test_positive__cut_command(message: str, expected: str):
+    """
+    Позитивный тест
+    Вырезание команды из строки
+    """
     assert message_parsers.cut_command(message) == expected
